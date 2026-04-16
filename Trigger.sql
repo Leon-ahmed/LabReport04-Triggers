@@ -1,4 +1,4 @@
-DROP DATABASE  IF EXISTS faculty_trigger_lab;
+DROP DATABASE IF EXISTS faculty_trigger_lab;
 CREATE DATABASE faculty_trigger_lab;
 USE faculty_trigger_lab;
 
@@ -22,8 +22,6 @@ CREATE TABLE SALARY_LOG (
     FOREIGN KEY (EmpID) REFERENCES EMPLOYEE(EmpID)
 );
 
-
-
 INSERT INTO EMPLOYEE (EmpID, EmpName, BasicSalary, StartDate, NoOfPub)
 VALUES
 (1, 'Rahim', 30000, '2022-01-10', 5),
@@ -35,9 +33,6 @@ VALUES
 (7, 'Tania', 26000, '2025-01-01', 1),
 (8, 'Rafi', 29000, '2023-08-18', 4);
 
-
-
-
 DELIMITER $$
 
 CREATE TRIGGER trg_before_update_salary
@@ -45,7 +40,6 @@ BEFORE UPDATE ON EMPLOYEE
 FOR EACH ROW
 BEGIN
     DECLARE duration INT;
-
     SET duration = TIMESTAMPDIFF(YEAR, NEW.StartDate, CURDATE());
 
     IF duration > 1 AND NEW.NoOfPub > 4 THEN
@@ -63,14 +57,13 @@ END$$
 
 DELIMITER ;
 
-
 DELIMITER $$
 
 CREATE TRIGGER trg_after_update_salary
 AFTER UPDATE ON EMPLOYEE
 FOR EACH ROW
 BEGIN
-    IF OLD.UpdatedSalary <> NEW.UpdatedSalary THEN
+    IF NOT (OLD.UpdatedSalary <=> NEW.UpdatedSalary) THEN
         INSERT INTO SALARY_LOG (EmpID, OldSalary, NewSalary, Note)
         VALUES (
             NEW.EmpID,
@@ -83,15 +76,12 @@ END$$
 
 DELIMITER ;
 
+UPDATE EMPLOYEE SET UpdatedSalary = BasicSalary;
 
-UPDATE EMPLOYEE SET NoOfPub = 5 WHERE EmpID = 1; -- 20%
-UPDATE EMPLOYEE SET NoOfPub = 3 WHERE EmpID = 2; -- 10%
-UPDATE EMPLOYEE SET NoOfPub = 1 WHERE EmpID = 3; -- 5%
-UPDATE EMPLOYEE SET NoOfPub = 0 WHERE EmpID = 4; -- 0%
-
-
-
+UPDATE EMPLOYEE SET NoOfPub = 6 WHERE EmpID = 1;
+UPDATE EMPLOYEE SET NoOfPub = 2 WHERE EmpID = 2;
+UPDATE EMPLOYEE SET NoOfPub = 1 WHERE EmpID = 3;
+UPDATE EMPLOYEE SET NoOfPub = 0 WHERE EmpID = 4;
 
 SELECT * FROM EMPLOYEE;
-
 SELECT * FROM SALARY_LOG;
